@@ -65,3 +65,86 @@ func TestZeroMarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestZeroUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		input    string
+		target   Gettable
+		expected string
+	}{
+		// Context: to a struct with the naked field
+		{
+			name:     `omitted field to a struct with the naked field`,
+			input:    `{}`,
+			target:   &Naked{},
+			expected: "",
+		},
+		{
+			name:     `"" to a struct with the naked field`,
+			input:    `{"Field":""}`,
+			target:   &Naked{},
+			expected: "",
+		},
+		{
+			name:     `null to a struct with the naked field`,
+			input:    `{"Field":null}`,
+			target:   &Naked{},
+			expected: "",
+		},
+		// Context: to a struct with the field JSON-tagged "field"
+		{
+			name:     `omitted field to a struct with the field JSON-tagged "field"`,
+			input:    `{}`,
+			target:   &DefaultTag{},
+			expected: "",
+		},
+		{
+			name:     `"" to a struct with the field JSON-tagged "field"`,
+			input:    `{"field":""}`,
+			target:   &DefaultTag{},
+			expected: "",
+		},
+		{
+			name:     `null to a struct with the field JSON-tagged "field"`,
+			input:    `{"field":null}`,
+			target:   &DefaultTag{},
+			expected: "",
+		},
+		// Context: to a struct with the field JSON-tagged "field,omitempty"
+		{
+			name:     `omitted field to a struct with the field JSON-tagged "field,omitempty"`,
+			input:    `{}`,
+			target:   &Omitempty{},
+			expected: "",
+		},
+		{
+			name:     `"" to a struct with the field JSON-tagged "field,omitempty"`,
+			input:    `{"field":""}`,
+			target:   &Omitempty{},
+			expected: "",
+		},
+		{
+			name:     `null to a struct with the field JSON-tagged "field,omitempty"`,
+			input:    `{"field":null}`,
+			target:   &Omitempty{},
+			expected: "",
+		},
+	}
+
+	for _, v := range cases {
+		t.Run(v.name, func(t *testing.T) {
+			if err := json.Unmarshal([]byte(v.input), v.target); err != nil {
+				t.Fatalf("failed to parse JSON: %s", err)
+			}
+
+			expected := v.expected
+			result := v.target.GetField()
+			if expected != result {
+				t.Fatalf(`expected field value is "%s", but detected value is "%s"`, expected, result)
+			}
+		})
+	}
+}
