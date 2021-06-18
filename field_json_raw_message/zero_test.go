@@ -7,23 +7,23 @@ import (
 
 type (
 	Gettable interface {
-		GetField() []byte
+		GetField() json.RawMessage
 	}
 
 	Naked struct {
-		Field []byte
+		Field json.RawMessage
 	}
 	DefaultTag struct {
-		Field []byte `json:"field"`
+		Field json.RawMessage `json:"field"`
 	}
 	Omitempty struct {
-		Field []byte `json:"field,omitempty"`
+		Field json.RawMessage `json:"field,omitempty"`
 	}
 )
 
-func (s Naked) GetField() []byte      { return s.Field }
-func (s DefaultTag) GetField() []byte { return s.Field }
-func (s Omitempty) GetField() []byte  { return s.Field }
+func (s Naked) GetField() json.RawMessage      { return s.Field }
+func (s DefaultTag) GetField() json.RawMessage { return s.Field }
+func (s Omitempty) GetField() json.RawMessage  { return s.Field }
 
 func TestZeroMarshal(t *testing.T) {
 	t.Parallel()
@@ -41,7 +41,7 @@ func TestZeroMarshal(t *testing.T) {
 		},
 		{
 			name:     "[] of a naked field",
-			target:   Naked{Field: []byte("")},
+			target:   Naked{Field: json.RawMessage("")},
 			expected: `{"Field":""}`,
 		},
 		// Context: of a field JSON-tagged "field"
@@ -52,7 +52,7 @@ func TestZeroMarshal(t *testing.T) {
 		},
 		{
 			name:     `[] of a field JSON-tagged "field"`,
-			target:   DefaultTag{Field: []byte("")},
+			target:   DefaultTag{Field: json.RawMessage("")},
 			expected: `{"field":""}`,
 		},
 		// Context: of a field JSON-tagged "field,omitempty"
@@ -63,7 +63,7 @@ func TestZeroMarshal(t *testing.T) {
 		},
 		{
 			name:     `[] of a field JSON-tagged "field,omitempty"`,
-			target:   Omitempty{Field: []byte("")},
+			target:   Omitempty{Field: json.RawMessage("")},
 			expected: `{}`,
 		},
 	}
@@ -91,7 +91,7 @@ func TestZeroUnmarshal(t *testing.T) {
 		name     string
 		input    string
 		target   Gettable
-		expected []byte
+		expected json.RawMessage
 	}{
 		// Context: to a struct with the naked field
 		{
@@ -104,7 +104,7 @@ func TestZeroUnmarshal(t *testing.T) {
 			name:     `"" to a struct with the naked field`,
 			input:    `{"Field":""}`,
 			target:   &Naked{},
-			expected: []byte(""),
+			expected: json.RawMessage(""),
 		},
 		{
 			name:     `null to a struct with the naked field`,
@@ -123,7 +123,7 @@ func TestZeroUnmarshal(t *testing.T) {
 			name:     `"" to a struct with the field JSON-tagged "field"`,
 			input:    `{"field":""}`,
 			target:   &DefaultTag{},
-			expected: []byte(""),
+			expected: json.RawMessage(""),
 		},
 		{
 			name:     `null to a struct with the field JSON-tagged "field"`,
@@ -142,7 +142,7 @@ func TestZeroUnmarshal(t *testing.T) {
 			name:     `"" to a struct with the field JSON-tagged "field,omitempty"`,
 			input:    `{"field":""}`,
 			target:   &Omitempty{},
-			expected: []byte(""),
+			expected: json.RawMessage(""),
 		},
 		{
 			name:     `null to a struct with the field JSON-tagged "field,omitempty"`,
@@ -154,7 +154,7 @@ func TestZeroUnmarshal(t *testing.T) {
 
 	for _, v := range cases {
 		t.Run(v.name, func(t *testing.T) {
-			if err := json.Unmarshal([]byte(v.input), v.target); err != nil {
+			if err := json.Unmarshal(json.RawMessage(v.input), v.target); err != nil {
 				t.Fatalf("failed to parse JSON: %s", err)
 			}
 
@@ -168,7 +168,7 @@ func TestZeroUnmarshal(t *testing.T) {
 	}
 }
 
-func strOrNil(b []byte) string {
+func strOrNil(b json.RawMessage) string {
 	if b == nil {
 		return "<nil>"
 	}
