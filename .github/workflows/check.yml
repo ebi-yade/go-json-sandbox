@@ -1,0 +1,41 @@
+name: Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    paths:
+      - "**.go"
+      - ".github/workflows/check.yml"
+      - "go.mod"
+      - "go.sum"
+      - ".go-version"
+      - "testdata/**"
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - id: go-version
+        name: Determine go version
+        run: |
+          go_version=$(cat .go-version)
+          echo "::set-output name=this::$go_version"
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ steps.go-version.outputs.this }}
+
+      - name: Code style validation
+        run: |
+          make lint
+
+      - name: Install Dependencies via go.mod
+        run: go mod download
+
+      - name: Unit test
+        run: make test
