@@ -5,33 +5,47 @@ import (
 	"testing"
 )
 
+type (
+	Gettable interface {
+		GetField() string
+	}
+
+	Naked struct {
+		Field string
+	}
+	DefaultTag struct {
+		Field string `json:"field"`
+	}
+	Omitempty struct {
+		Field string `json:"field,omitempty"`
+	}
+)
+
+func (s Naked) GetField() string      { return s.Field }
+func (s DefaultTag) GetField() string { return s.Field }
+func (s Omitempty) GetField() string  { return s.Field }
+
 func TestZeroMarshal(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
 		name     string
-		target   interface{}
+		target   Gettable
 		expected string
 	}{
 		{
-			name: "a naked field",
-			target: struct {
-				Field string
-			}{Field: ""},
+			name:     "a naked field",
+			target:   Naked{},
 			expected: `{"Field":""}`,
 		},
 		{
-			name: "a default JSON tag",
-			target: struct {
-				Field string `json:"field"`
-			}{Field: ""},
+			name:     "a default JSON tag",
+			target:   DefaultTag{},
 			expected: `{"field":""}`,
 		},
 		{
-			name: "a JSON tag with omitempty",
-			target: struct {
-				Field string `json:"field,omitempty"`
-			}{Field: ""},
+			name:     "a JSON tag with omitempty",
+			target:   Omitempty{},
 			expected: `{}`,
 		},
 	}
